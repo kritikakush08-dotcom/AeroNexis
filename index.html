@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07110f">
+  <title>AeroNexis SkyRoute | Flight Network Planner</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="AeroNexis SkyRoute home">
+      <span class="brand-mark">✈</span>
+      <span>
+        <strong>AeroNexis</strong>
+        <small>SKYROUTE INTELLIGENCE</small>
+      </span>
+    </a>
+    <div class="live-status">
+      <span class="status-dot"></span>
+      INTERACTIVE DEMO
+    </div>
+  </header>
+
+  <main class="dashboard">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">SMART AVIATION · GRAPH ALGORITHMS</p>
+        <h1>Plan smarter.<br><span>Fly farther.</span></h1>
+        <p class="hero-copy">
+          Explore a 15-airport sample network, find shortest routes
+          with Dijkstra's algorithm, test connection closures, and
+          estimate fuel costs.
+        </p>
+      </div>
+      <div class="hero-stat">
+        <span>NETWORK AIRPORTS</span>
+        <strong id="airportCount">15</strong>
+        <small>Educational simulation</small>
+      </div>
+    </section>
+
+    <section class="metrics" aria-label="Network overview">
+      <article class="metric">
+        <span class="metric-symbol">⌖</span>
+        <div><p>Airports</p><strong id="overviewAirports">15</strong></div>
+      </article>
+      <article class="metric">
+        <span class="metric-symbol">↔</span>
+        <div><p>Open connections</p><strong id="overviewConnections">32</strong></div>
+      </article>
+      <article class="metric">
+        <span class="metric-symbol">↗</span>
+        <div><p>Route distance</p><strong id="overviewDistance">—</strong></div>
+      </article>
+      <article class="metric">
+        <span class="metric-symbol">◉</span>
+        <div><p>Route status</p><strong id="overviewStatus">Ready</strong></div>
+      </article>
+    </section>
+
+    <section class="main-grid">
+      <article class="panel planner">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">FLIGHT PLANNER</p>
+            <h2>Find a route</h2>
+          </div>
+          <span class="pill">DIJKSTRA</span>
+        </div>
+
+        <p class="muted">
+          Choose airports below or click airport nodes on the map.
+        </p>
+
+        <form id="routeForm">
+          <label for="source">Departure airport</label>
+          <select id="source" required></select>
+
+          <button type="button" id="swapButton" class="swap-button">
+            ⇅ Swap airports
+          </button>
+
+          <label for="destination">Destination airport</label>
+          <select id="destination" required></select>
+
+          <button class="primary-button" type="submit">
+            Calculate shortest route <span>→</span>
+          </button>
+        </form>
+
+        <div id="result" class="result-box" aria-live="polite">
+          <div class="empty-state">
+            <span>✈</span>
+            <h3>Your route appears here</h3>
+            <p>Select two airports to begin.</p>
+          </div>
+        </div>
+
+        <div class="algorithm-box">
+          <h3>Algorithm steps</h3>
+          <ol id="steps">
+            <li>Choose departure and destination.</li>
+            <li>Dijkstra checks available connections.</li>
+            <li>The shortest available route is displayed.</li>
+          </ol>
+        </div>
+      </article>
+
+      <article class="panel network-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">NETWORK VIEW</p>
+            <h2>Airport connection map</h2>
+          </div>
+          <span class="pill green-pill">CLICKABLE</span>
+        </div>
+
+        <div class="legend">
+          <span><i class="legend-dot"></i> Airport</span>
+          <span><i class="legend-line"></i> Selected route</span>
+          <span><i class="legend-line closed"></i> Closed connection</span>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="graphCanvas"
+            aria-label="Clickable airport network map"></canvas>
+        </div>
+
+        <p class="map-hint">
+          Click one airport for departure, then another for destination.
+          The dropdowns also work.
+        </p>
+        <p id="mapSelectionStatus" class="selection-status" aria-live="polite">
+          Choose a departure airport on the map or using the dropdowns.
+        </p>
+
+        <div class="restriction-section">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">NETWORK CONTROL</p>
+              <h3>Connection restrictions</h3>
+            </div>
+          </div>
+          <p class="muted small">
+            Close or reopen a connection to test how the shortest route changes.
+          </p>
+          <div id="airspaceButtons" class="restriction-list"></div>
+          <p id="airspaceStatus" class="status-message" aria-live="polite">
+            All connections are open.
+          </p>
+        </div>
+      </article>
+    </section>
+
+    <section class="lower-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">COST ESTIMATION</p>
+            <h2>Fuel calculator</h2>
+          </div>
+          <span class="pill">ESTIMATE</span>
+        </div>
+
+        <form id="fuelForm" class="fuel-form">
+          <label for="fuelDistance">Distance (km)</label>
+          <input id="fuelDistance" type="number" min="0.1"
+            step="any" placeholder="e.g. 750" required>
+
+          <label for="fuelRate">Fuel consumption (litres per 100 km)</label>
+          <input id="fuelRate" type="number" min="0.1"
+            step="any" value="300" required>
+
+          <label for="fuelPrice">Fuel price per litre (₹)</label>
+          <input id="fuelPrice" type="number" min="0"
+            step="any" value="100" required>
+
+          <button class="primary-button" type="submit">
+            Calculate fuel cost →
+          </button>
+        </form>
+
+        <div id="fuelResult" class="fuel-result" aria-live="polite">
+          Enter flight details to estimate fuel usage and cost.
+        </div>
+
+        <button id="useRouteFuel" type="button" class="secondary-button" disabled>
+          Use calculated route distance
+        </button>
+
+        <p class="disclaimer">
+          Illustrative calculation only. Actual aircraft fuel consumption varies.
+        </p>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">AIRPORT INTELLIGENCE</p>
+            <h2>Operations overview</h2>
+          </div>
+          <span class="pill">SAMPLE DATA</span>
+        </div>
+        <div id="operationsCards" class="operations-grid"></div>
+        <div id="operationsRecommendation" class="recommendation">
+          Calculate a route to see the sample operations advisory.
+        </div>
+      </article>
+    </section>
+
+    <section class="panel weather-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">WEATHER MONITOR</p>
+          <h2>Airport conditions</h2>
+        </div>
+        <span class="pill">SIMULATED</span>
+      </div>
+      <p class="muted">
+        These are sample values for the project demonstration, not live weather reports.
+      </p>
+      <div id="weatherResults" class="weather-grid"></div>
+    </section>
+
+    <footer class="footer">
+      <div class="brand">
+        <span class="brand-mark">✈</span>
+        <span>
+          <strong>AeroNexis SkyRoute</strong>
+          <small>ACADEMIC PROJECT · ROUTE OPTIMISATION</small>
+        </span>
+      </div>
+      <p>Graph theory · Dijkstra's algorithm · Network simulation</p>
+    </footer>
+  </main>
+
+  <noscript>
+    <p class="noscript">Please enable JavaScript to use the SkyRoute interactive features.</p>
+  </noscript>
+</body>
+</html>
